@@ -1,3 +1,5 @@
+import '../exceptions/app_exceptions.dart';
+import 'connectivity_service.dart';
 import 'entity_service.dart';
 import 'logger_service.dart';
 
@@ -26,10 +28,20 @@ abstract class LoggingEntityService<T> implements EntityService<T> {
   Future<void> updateEntityImpl(String id, T entity);
   Future<void> deleteEntityByIdImpl(String id);
 
+  // --- Connectivity guard ---
+
+  /// Throws [NoInternetException] if the device has no network connection.
+  Future<void> _ensureConnected() async {
+    if (!await ConnectivityService.isOnline()) {
+      throw NoInternetException();
+    }
+  }
+
   // --- Public methods with automatic logging ---
 
   @override
   Future<T?> fetchById(String id) async {
+    await _ensureConnected();
     try {
       logger.info('Fetching $entityTypeName with id=$id from $tableName');
       final result = await fetchByIdImpl(id);
@@ -47,6 +59,7 @@ abstract class LoggingEntityService<T> implements EntityService<T> {
 
   @override
   Future<List<T>> fetchAll() async {
+    await _ensureConnected();
     try {
       logger.info('Fetching all $entityTypeName from $tableName');
       final result = await fetchAllImpl("LoggingEntityService");
@@ -62,6 +75,7 @@ abstract class LoggingEntityService<T> implements EntityService<T> {
 
   @override
   Future<T> create(T entity) async {
+    await _ensureConnected();
     try {
       logger.info('Creating new $entityTypeName in $tableName');
       final result = await createImpl(entity);
@@ -75,6 +89,7 @@ abstract class LoggingEntityService<T> implements EntityService<T> {
 
   @override
   Future<T> update(String id, T entity) async {
+    await _ensureConnected();
     try {
       logger.info('Updating $entityTypeName with id=$id in $tableName');
       final result = await updateImpl(id, entity);
@@ -88,6 +103,7 @@ abstract class LoggingEntityService<T> implements EntityService<T> {
 
   @override
   Future<void> delete(String id) async {
+    await _ensureConnected();
     try {
       logger.info('Deleting $entityTypeName with id=$id from $tableName');
       await deleteImpl(id);
@@ -100,6 +116,7 @@ abstract class LoggingEntityService<T> implements EntityService<T> {
 
   @override
   Stream<List<T>> streamEntities() async* {
+    await _ensureConnected();
     try {
       logger.info('Starting stream for $entityTypeName from $tableName');
       await for (final items in streamEntitiesImpl()) {
@@ -117,6 +134,7 @@ abstract class LoggingEntityService<T> implements EntityService<T> {
   // Legacy methods with logging
   @override
   Future<T> getEntityById(String id) async {
+    await _ensureConnected();
     try {
       logger.info('Getting $entityTypeName with id=$id (legacy method)');
       final result = await getEntityByIdImpl(id);
@@ -130,6 +148,7 @@ abstract class LoggingEntityService<T> implements EntityService<T> {
 
   @override
   Future<void> insertEntity(T entity) async {
+    await _ensureConnected();
     try {
       logger.info('Inserting new $entityTypeName (legacy method)');
       await insertEntityImpl(entity);
@@ -142,6 +161,7 @@ abstract class LoggingEntityService<T> implements EntityService<T> {
 
   @override
   Future<void> updateEntity(String id, T entity) async {
+    await _ensureConnected();
     try {
       logger.info('Updating $entityTypeName with id=$id (legacy method)');
       await updateEntityImpl(id, entity);
@@ -154,6 +174,7 @@ abstract class LoggingEntityService<T> implements EntityService<T> {
 
   @override
   Future<void> deleteEntityById(String id) async {
+    await _ensureConnected();
     try {
       logger.info('Deleting $entityTypeName with id=$id (legacy method)');
       await deleteEntityByIdImpl(id);

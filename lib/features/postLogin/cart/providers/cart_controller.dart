@@ -150,7 +150,7 @@ class CartController {
     // Show loading dialog
     showLoadingDialog(
       context: context,
-      message: l10n['place_order'] ?? 'Placing order...',
+      message: l10n['please_wait'] ?? 'Placing order...',
     );
 
     try {

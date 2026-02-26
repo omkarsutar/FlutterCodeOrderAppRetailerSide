@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
+import '../../../../core/services/connectivity_service.dart';
 import '../../purchase_orders/purchase_order_barrel.dart';
 import '../../po_items/model/po_item_model.dart';
 import '../../po_items/service/po_item_service_impl.dart';
@@ -23,6 +25,11 @@ class CartOrderService {
     required String userId,
     required String? roleName,
   }) async {
+    // Check connectivity before placing order
+    if (!await ConnectivityService.isOnline()) {
+      throw NoInternetException();
+    }
+
     // Default hardcoded IDs for guest and salesperson
     String poShopId = '322d2aeb-34b3-47ef-aa5b-e411add1c7ba';
     String poRouteId = '1ce6a931-4866-4645-a680-102b4b9e923b';

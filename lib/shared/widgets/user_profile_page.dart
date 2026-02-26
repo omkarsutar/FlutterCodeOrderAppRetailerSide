@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import '../../core/exceptions/app_exceptions.dart';
 import '../../core/providers/auth_providers.dart';
+import '../../core/services/connectivity_service.dart';
 import '../../core/utils/snackbar_utils.dart';
 import '../../core/validators/form_validators.dart';
 import 'shared_widget_barrel.dart';
@@ -41,6 +43,10 @@ class _UserProfilePageState extends ConsumerState<UserProfilePage> {
         ModelUserFields.fullName: _nameController.text,
         ModelUserFields.preferredRouteId: _routeController.text,
       };
+
+      if (!await ConnectivityService.isOnline()) {
+        throw NoInternetException();
+      }
 
       await Supabase.instance.client
           .from(ModelUserFields.table)

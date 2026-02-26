@@ -9,6 +9,8 @@ import 'dart:html' as html show window;
 import 'core/config/supabase_config.dart';
 import 'core/globals.dart';
 import 'core/providers/auth_providers.dart';
+import 'core/providers/localization_provider.dart';
+import 'core/services/connectivity_service.dart';
 import 'router/app_router.dart';
 
 // Translate letters to numbers: a-0, b-1, c-2, d-3, e-4, f-5, g-6, h-7, i-8, j-9
@@ -123,43 +125,45 @@ class _MainAppState extends ConsumerState<MainApp> {
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
 
-    return RoleChangeDetector(
-      child: RetailerShopLinkChangeDetector(
-        child: MaterialApp.router(
-          title: 'Orderzapp',
-          scaffoldMessengerKey: scaffoldMessengerKey,
-          routerConfig: router,
-          theme: ThemeData(
-            useMaterial3: true,
-            fontFamily: 'Roboto',
-            colorScheme: ColorScheme.fromSeed(
-              seedColor: const Color(0xFF673AB7), // Deep Purple
-              brightness: Brightness.light,
-            ),
-            cardTheme: CardThemeData(
-              elevation: 2,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+    return ConnectivityToastListener(
+      child: RoleChangeDetector(
+        child: RetailerShopLinkChangeDetector(
+          child: MaterialApp.router(
+            title: 'Orderzapp',
+            scaffoldMessengerKey: scaffoldMessengerKey,
+            routerConfig: router,
+            theme: ThemeData(
+              useMaterial3: true,
+              fontFamily: 'Roboto',
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: const Color(0xFF673AB7), // Deep Purple
+                brightness: Brightness.light,
               ),
-              color: const Color(0xFFF3E5F5), // Soft Lilac background
-            ),
-            inputDecorationTheme: InputDecorationTheme(
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+              cardTheme: CardThemeData(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                color: const Color(0xFFF3E5F5), // Soft Lilac background
               ),
-              filled: true,
-              fillColor: const Color(0xFFF3E5F5), // Subtle lilac fill
-            ),
-            appBarTheme: const AppBarTheme(
-              centerTitle: false,
-              elevation: 0,
-              backgroundColor: Color(0xFF673AB7), // Deep Purple AppBar
-              foregroundColor: Colors.white, // White text/icons
-            ),
-            floatingActionButtonTheme: FloatingActionButtonThemeData(
-              backgroundColor: const Color(0xFFFFC107), // Amber FAB
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+              inputDecorationTheme: InputDecorationTheme(
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                filled: true,
+                fillColor: const Color(0xFFF3E5F5), // Subtle lilac fill
+              ),
+              appBarTheme: const AppBarTheme(
+                centerTitle: false,
+                elevation: 0,
+                backgroundColor: Color(0xFF673AB7), // Deep Purple AppBar
+                foregroundColor: Colors.white, // White text/icons
+              ),
+              floatingActionButtonTheme: FloatingActionButtonThemeData(
+                backgroundColor: const Color(0xFFFFC107), // Amber FAB
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
               ),
             ),
           ),
@@ -347,5 +351,76 @@ class RetailerShopLinkChangeDetector extends ConsumerWidget {
     }
 
     return false;
+  }
+}
+
+/// A widget that listens for internet connectivity changes
+/// and shows localized toast notifications immediately.
+class ConnectivityToastListener extends ConsumerStatefulWidget {
+  final Widget child;
+  const ConnectivityToastListener({super.key, required this.child});
+
+  @override
+  ConsumerState<ConnectivityToastListener> createState() =>
+      _ConnectivityToastListenerState();
+}
+
+class _ConnectivityToastListenerState
+    extends ConsumerState<ConnectivityToastListener> {
+  bool? _previousStatus;
+
+  @override
+  Widget build(BuildContext context) {
+    ref.listen<AsyncValue<bool>>(connectivityStatusProvider, (previous, next) {
+      final isOnline = next.valueOrNull;
+      if (isOnline == null) return;
+
+      // Skip the very first emission to avoid showing toast on app start
+      if (_previousStatus == null) {
+        _previousStatus = isOnline;
+        return;
+      }
+
+      // Only show toast when status actually changes
+      if (_previousStatus == isOnline) return;
+      _previousStatus = isOnline;
+
+      final l10n = ref.read(l10nProvider);
+
+      scaffoldMessengerKey.currentState?.clearSnackBars();
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              Icon(isOnline ? Icons.wifi : Icons.wifi_off, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  isOnline
+                      ? (l10n['internet_connected'] ?? 'Back online!')
+                      : (l10n['internet_disconnected'] ??
+                            'You are offline. Some features may not work.'),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: isOnline
+              ? Colors.green.shade700
+              : Colors.red.shade700,
+          duration: Duration(seconds: isOnline ? 3 : 5),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+      );
+
+      debugPrint(
+        'ConnectivityToastListener: ${isOnline ? "Connected" : "Disconnected"}',
+      );
+    });
+
+    return widget.child;
   }
 }

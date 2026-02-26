@@ -2,6 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_supabase_order_app_mobile/features/postLogin/rbac_permissions/rbac_permission_barrel.dart';
 import 'package:flutter_supabase_order_app_mobile/features/postLogin/users/user_barrel.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../exceptions/app_exceptions.dart';
+import 'connectivity_service.dart';
 import 'error_handler.dart';
 
 /// Enum representing the 4 permission actions in RBAC
@@ -43,6 +45,9 @@ class RbacService {
   /// Initialize the RBAC system by loading user's role and permissions
   /// Should be called when user is authenticated
   Future<void> initializeRbac(String userId) async {
+    if (!await ConnectivityService.isOnline()) {
+      throw NoInternetException();
+    }
     try {
       // Get user's role
       final userData = await _client
@@ -164,6 +169,9 @@ class RbacService {
   Future<void> refreshPermissions() async {
     if (_cachedRoleId == null) {
       throw Exception('No role ID cached. Initialize RBAC first.');
+    }
+    if (!await ConnectivityService.isOnline()) {
+      throw NoInternetException();
     }
     await _loadUserPermissions(_cachedRoleId!);
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../exceptions/app_exceptions.dart';
 import '../utils/snackbar_utils.dart';
 import 'logger_service.dart';
 
@@ -80,6 +81,11 @@ class ErrorHandler {
 
   /// Generates a user-friendly error message based on the error type.
   static String _getUserFriendlyMessage(Object error, String context) {
+    // No internet
+    if (error is NoInternetException) {
+      return 'No internet connection. Please check your network.';
+    }
+
     // Supabase/PostgreSQL errors
     if (error is PostgrestException) {
       return _handlePostgrestException(error);

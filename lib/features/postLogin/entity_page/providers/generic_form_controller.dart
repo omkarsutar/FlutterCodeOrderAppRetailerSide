@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/config/field_config.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
+import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/services/entity_service.dart';
 
 class GenericFormState {
@@ -45,6 +47,10 @@ class GenericFormController
   }
 
   Future<void> loadDropdownOptions(List<FieldConfig> fieldConfigs) async {
+    if (!await ConnectivityService.isOnline()) {
+      throw NoInternetException();
+    }
+
     final newOptions = Map<String, List<Map<String, dynamic>>>.from(
       state.dropdownOptions,
     );

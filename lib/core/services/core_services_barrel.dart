@@ -2,6 +2,7 @@
 // Exports all foundational services for the application
 
 export 'auth_service.dart';
+export 'connectivity_service.dart';
 export 'entity_service.dart';
 export 'error_handler.dart';
 export 'logger_service.dart';

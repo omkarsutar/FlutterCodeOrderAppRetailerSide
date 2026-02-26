@@ -4,7 +4,7 @@ enum AppLanguage { english, hindi, marathi }
 
 class LanguageNotifier extends Notifier<AppLanguage> {
   @override
-  AppLanguage build() => AppLanguage.english;
+  AppLanguage build() => AppLanguage.hindi;
 
   void toggleLanguage() {
     if (state == AppLanguage.english) {
@@ -73,6 +73,14 @@ const _translations = {
     'no_products_found': 'No products found',
     'no_matching_products': 'No matching products',
     'error_loading': 'Error loading',
+    'no_internet': 'No internet connection. Please check your network.',
+    'internet_connected': 'Back online!',
+    'internet_disconnected': 'You are offline. Some features may not work.',
+    'save_success': 'Saved successfully!',
+    'delete_success': 'Deleted successfully!',
+    'save_failed': 'Failed to save.',
+    'delete_failed': 'Failed to delete.',
+    'please_wait': 'Please wait...',
   },
   AppLanguage.marathi: {
     'app_title': 'OrderZApp',
@@ -116,6 +124,14 @@ const _translations = {
     'no_products_found': 'कोणतेही सामान सापडले नाही',
     'no_matching_products': 'जुळणारे सामान सापडले नाही',
     'error_loading': 'क्षमस्व, लोड होत नाही',
+    'no_internet': 'इंटरनेट कनेक्शन नाही. कृपया तुमचे नेटवर्क तपासा.',
+    'internet_connected': 'इंटरनेट परत आले!',
+    'internet_disconnected': 'तुम्ही ऑफलाइन आहात. काही सुविधा काम करणार नाहीत.',
+    'save_success': 'यशस्वीरीत्या सेव्ह झाले!',
+    'delete_success': 'यशस्वीरीत्या डिलीट झाले!',
+    'save_failed': 'सेव्ह होऊ शकले नाही.',
+    'delete_failed': 'डिलीट होऊ शकले नाही.',
+    'please_wait': 'कृपया थांबा..',
   },
   AppLanguage.hindi: {
     'app_title': 'OrderZApp',
@@ -159,5 +175,13 @@ const _translations = {
     'no_products_found': 'कोई सामान नहीं मिला',
     'no_matching_products': 'मिलता-जुलता सामान नहीं मिला',
     'error_loading': 'क्षमा करें, लोड नहीं हो पाया',
+    'no_internet': 'इंटरनेट कनेक्शन नहीं है। कृपया अपना नेटवर्क जांचें।',
+    'internet_connected': 'इंटरनेट वापस आ गया!',
+    'internet_disconnected': 'आप ऑफलाइन हैं। कुछ सुविधाएँ काम नहीं करेंगी।',
+    'save_success': 'सफलतापूर्वक सेव हो गया!',
+    'delete_success': 'सफलतापूर्वक डिलीट हो गया!',
+    'save_failed': 'सेव नहीं हो पाया।',
+    'delete_failed': 'डिलीट नहीं हो पाया।',
+    'please_wait': 'कृपया प्रतीक्षा करें...',
   },
 };

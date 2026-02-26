@@ -9,6 +9,8 @@ import '../../router/app_router.dart';
 
 import '../../features/postLogin/users/user_barrel.dart';
 import '../constants/app_constants.dart';
+import '../exceptions/app_exceptions.dart';
+import 'connectivity_service.dart';
 import 'rbac_service.dart';
 import 'error_handler.dart';
 
@@ -27,6 +29,9 @@ class AuthService {
         : AppConstants.webAppLocalUrl;
 
     try {
+      if (!await ConnectivityService.isOnline()) {
+        throw NoInternetException();
+      }
       await _client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: redirectUri,
@@ -78,6 +83,9 @@ class AuthService {
 
   /// Load user profile from Supabase and store globally, then initialize RBAC
   Future<void> loadAndStoreUserProfile() async {
+    if (!await ConnectivityService.isOnline()) {
+      throw NoInternetException();
+    }
     final userId = _client.auth.currentUser?.id;
     if (userId == null) throw Exception('User not logged in');
 

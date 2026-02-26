@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/field_config.dart';
+import '../exceptions/app_exceptions.dart';
+import 'connectivity_service.dart';
 import 'logger_service.dart';
 
 /// Generic entity service interface for all CRUD operations
@@ -100,10 +102,18 @@ abstract class ForeignKeyAwareService<T> implements EntityService<T> {
     sortAscending = ascending;
   }
 
+  // --- Connectivity guard ---
+  Future<void> _ensureConnected() async {
+    if (!await ConnectivityService.isOnline()) {
+      throw NoInternetException();
+    }
+  }
+
   // --- New EntityService<T> contract methods ---
 
   @override
   Future<T?> fetchById(String id) async {
+    await _ensureConnected();
     final source = viewName ?? tableName;
     try {
       logger.info('Fetching $T with id=$id from $source');
@@ -130,6 +140,7 @@ abstract class ForeignKeyAwareService<T> implements EntityService<T> {
 
   @override
   Future<List<T>> fetchAll() async {
+    await _ensureConnected();
     final source = viewName ?? tableName;
     try {
       logger.info('Fetching all $T from $source');
@@ -152,6 +163,7 @@ abstract class ForeignKeyAwareService<T> implements EntityService<T> {
 
   @override
   Future<T> create(T entity) async {
+    await _ensureConnected();
     try {
       logger.info('Creating new $T in $tableName');
       final inserted = await client
@@ -170,6 +182,7 @@ abstract class ForeignKeyAwareService<T> implements EntityService<T> {
 
   @override
   Future<T> update(String id, T entity) async {
+    await _ensureConnected();
     try {
       logger.info('Updating $T with id=$id in $tableName');
       final updated = await client
@@ -189,6 +202,7 @@ abstract class ForeignKeyAwareService<T> implements EntityService<T> {
 
   @override
   Future<void> delete(String id) async {
+    await _ensureConnected();
     try {
       logger.info('Deleting $T with id=$id from $tableName');
       await client.from(tableName).delete().eq(idColumn, id);
@@ -201,6 +215,7 @@ abstract class ForeignKeyAwareService<T> implements EntityService<T> {
 
   @override
   Stream<List<T>> streamEntities() async* {
+    await _ensureConnected();
     try {
       logger.info('Starting sorted stream for $T from $tableName');
 

@@ -11,6 +11,8 @@ class ProductAdapter implements EntityAdapter<ModelProduct> {
         return entity.productType;
       case ModelProductFields.productName:
         return entity.productName;
+      case ModelProductFields.productNameHindi:
+        return entity.productNameHindi;
       case ModelProductFields.productWeightValue:
         return entity.productWeightValue;
       case ModelProductFields.productWeightUnit:

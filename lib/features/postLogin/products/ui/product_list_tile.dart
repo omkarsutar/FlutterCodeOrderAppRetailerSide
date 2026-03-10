@@ -41,11 +41,22 @@ class _ProductListTileState extends ConsumerState<ProductListTile> {
     );
 
     // Extract product data using adapter + entity
-    final productName =
-        widget.adapter
+    String productName = widget.adapter
             .getFieldValue(widget.entity, ModelProductFields.productName)
             ?.toString() ??
         '';
+
+    final currentLanguage = ref.watch(languageProvider);
+    final isHindiOrMarathi = currentLanguage == AppLanguage.hindi || currentLanguage == AppLanguage.marathi;
+    
+    if (isHindiOrMarathi) {
+      final productNameHindi = widget.adapter
+          .getFieldValue(widget.entity, ModelProductFields.productNameHindi)
+          ?.toString();
+      if (productNameHindi != null && productNameHindi.isNotEmpty) {
+        productName = productNameHindi;
+      }
+    }
 
     // Normalize image URL (memoize for this build)
     final productImage = () {
@@ -274,7 +285,7 @@ class _ProductListTileState extends ConsumerState<ProductListTile> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
         child: Text(
-          ref.watch(l10nProvider)['add_to_cart'] ?? 'ADD to Cart',
+          '${ref.watch(l10nProvider)['add_to_cart'] ?? 'ADD to Cart'} +',
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
         ),
       ),

@@ -10,6 +10,7 @@ import 'package:flutter_supabase_order_app_mobile/features/postLogin/entity_page
 import '../../cart/providers/cart_providers.dart';
 import '../../../../router/app_routes.dart';
 import '../providers/product_providers.dart';
+import '../../../../core/providers/localization_provider.dart';
 import '../model/product_model.dart';
 import '../../po_items/model/po_item_model.dart';
 
@@ -411,6 +412,12 @@ class ProductViewPageRiverpod extends ConsumerWidget {
                 headerPhotoUrl = Uri.encodeFull(Uri.decodeFull(headerPhotoUrl));
               }
 
+              final currentLanguage = ref.watch(languageProvider);
+              final isHindiOrMarathi = currentLanguage == AppLanguage.hindi || currentLanguage == AppLanguage.marathi;
+              final displayName = (isHindiOrMarathi && product.productNameHindi != null && product.productNameHindi!.isNotEmpty) 
+                  ? product.productNameHindi! 
+                  : product.productName;
+
               return SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -429,7 +436,7 @@ class ProductViewPageRiverpod extends ConsumerWidget {
                         children: [
                           // Product Name
                           Text(
-                            product.productName,
+                            displayName,
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.w400,
                               color: Colors.black87,

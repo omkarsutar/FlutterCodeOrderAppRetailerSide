@@ -180,7 +180,7 @@ class _CartPageState extends ConsumerState<CartPage>
                   decoration: BoxDecoration(
                     color: _profitHighlightController.value > 0
                         ? _profitColorAnimation.value
-                        : theme.colorScheme.surface.withValues(alpha: 0.5),
+                        : Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: Colors.green.withValues(alpha: 0.1),

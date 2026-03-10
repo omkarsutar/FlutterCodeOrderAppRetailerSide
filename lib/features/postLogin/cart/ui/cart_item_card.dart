@@ -5,6 +5,7 @@ import '../../po_items/model/po_item_model.dart';
 import '../../products/product_barrel.dart';
 import '../providers/cart_providers.dart';
 import '../../../../core/widgets/quantity_selector.dart';
+import '../../../../core/providers/localization_provider.dart';
 
 class CartItemCard extends ConsumerStatefulWidget {
   final ModelPoItem entity;
@@ -99,6 +100,15 @@ class _CartItemCardState extends ConsumerState<CartItemCard> {
     }
 
     final product = _product;
+
+    final currentLanguage = ref.watch(languageProvider);
+    final isHindiOrMarathi = currentLanguage == AppLanguage.hindi || currentLanguage == AppLanguage.marathi;
+    
+    String displayName = widget.entity.itemName ?? 'Unnamed Item';
+    if (isHindiOrMarathi && product?.productNameHindi != null && product!.productNameHindi!.isNotEmpty) {
+      displayName = product.productNameHindi!;
+    }
+
     String? productImage = product?.productImage;
     if (productImage != null && productImage.isNotEmpty) {
       productImage = Uri.encodeFull(Uri.decodeFull(productImage));
@@ -169,7 +179,7 @@ class _CartItemCardState extends ConsumerState<CartItemCard> {
                       children: [
                         Expanded(
                           child: Text(
-                            widget.entity.itemName ?? 'Unnamed Item',
+                            displayName,
                             style: theme.textTheme.titleSmall?.copyWith(
                               fontWeight: FontWeight.bold,
                               height: 1.2,

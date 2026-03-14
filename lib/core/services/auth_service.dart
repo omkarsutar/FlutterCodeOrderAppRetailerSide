@@ -2,11 +2,12 @@ import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:html' as html;
+import '../utils/platform/web_utils.dart';
 import '../providers/user_profile_state_provider.dart';
 
 import '../../router/app_router.dart';
 
+import '../providers/core_providers.dart';
 import '../../features/postLogin/users/user_barrel.dart';
 import '../constants/app_constants.dart';
 import '../exceptions/app_exceptions.dart';
@@ -24,9 +25,14 @@ class AuthService {
 
   /// Sign in with Google and load user profile
   Future<void> signInWithGoogle() async {
-    final redirectUri = kReleaseMode
-        ? AppConstants.webAppProdUrl
-        : AppConstants.webAppLocalUrl;
+    final String redirectUri;
+    if (kIsWeb) {
+      redirectUri = kReleaseMode
+          ? AppConstants.webAppProdUrl
+          : AppConstants.webAppLocalUrl;
+    } else {
+      redirectUri = AppConstants.mobileRedirectUri;
+    }
 
     try {
       if (!await ConnectivityService.isOnline()) {
@@ -53,14 +59,7 @@ class AuthService {
       switch (authState.event) {
         case AuthChangeEvent.signedIn:
           if (kIsWeb) {
-            // Clean up URL query parameters (code, state, etc.) after Google login redirect
-            final currentUrl = html.window.location.href;
-            if (currentUrl.contains('?')) {
-              final newUrl =
-                  currentUrl.split('?')[0] + html.window.location.hash;
-              html.window.history.replaceState(null, '', newUrl);
-              debugPrint('AuthService: Cleaned up URL parameters');
-            }
+            webUtils.cleanUrlParameters();
           }
           await loadAndStoreUserProfile();
           initializeUserProfileStream();
@@ -115,14 +114,22 @@ class AuthService {
         .from(ModelUserFields.table)
         .stream(primaryKey: [ModelUserFields.userId])
         .eq(ModelUserFields.userId, userId)
-        .listen((snapshot) {
-          if (snapshot.isNotEmpty) {
-            final updatedProfile = ModelUser.fromMap(snapshot.first);
-            _ref
-                .read(userProfileStateProvider.notifier)
-                .setProfile(updatedProfile);
-          }
-        });
+        .listen(
+          (snapshot) {
+            if (snapshot.isNotEmpty) {
+              final updatedProfile = ModelUser.fromMap(snapshot.first);
+              _ref
+                  .read(userProfileStateProvider.notifier)
+                  .setProfile(updatedProfile);
+            }
+          },
+          onError: (error, stackTrace) {
+            _ref.read(loggerServiceProvider).error(
+              'Error in userProfileStream (AuthService): $error',
+              stackTrace is StackTrace ? stackTrace : null,
+            );
+          },
+        );
   }
 
   /// Cancel profile stream subscription

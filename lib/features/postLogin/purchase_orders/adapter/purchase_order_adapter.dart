@@ -33,6 +33,8 @@ class PurchaseOrderAdapter implements EntityAdapter<ModelPurchaseOrder> {
         return entity.createdAt;
       case ModelPurchaseOrderFields.updatedAt:
         return entity.updatedAt;
+      case ModelPurchaseOrderFields.adminComment:
+        return entity.adminComment;
       default:
         return null;
     }

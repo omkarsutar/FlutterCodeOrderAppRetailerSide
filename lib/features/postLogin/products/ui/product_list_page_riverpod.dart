@@ -25,7 +25,7 @@ class ProductListPageRiverpod<T> extends ConsumerStatefulWidget {
   final bool isSelectionMode;
   final SortingConfig? initialSorting;
   // Riverpod providers
-  final ProviderListenable<AsyncValue<List<T>>> streamProvider;
+  final Refreshable<AsyncValue<List<T>>> streamProvider;
   final Provider<EntityAdapter<T>> adapterProvider;
   final Provider<EntityService<T>> serviceProvider;
 
@@ -474,76 +474,18 @@ class _ProductListPageRiverpodState<T>
                                   ],
                                 ),
                               )
-                            : CustomScrollView(
-                                slivers: [
-                                  if (listState.searchQuery.isNotEmpty)
-                                    SliverPadding(
-                                      padding: const EdgeInsets.all(12),
-                                      sliver: SliverGrid(
-                                        gridDelegate:
-                                            const SliverGridDelegateWithFixedCrossAxisCount(
-                                              crossAxisCount: 2,
-                                              childAspectRatio: 0.65,
-                                              crossAxisSpacing: 10,
-                                              mainAxisSpacing: 10,
-                                            ),
-                                        delegate: SliverChildBuilderDelegate((
-                                          context,
-                                          index,
-                                        ) {
-                                          final entity =
-                                              filteredEntities[index];
-                                          return _buildProductTile(
-                                            context,
-                                            entity,
-                                            entityAdapter,
-                                          );
-                                        }, childCount: filteredEntities.length),
-                                      ),
-                                    )
-                                  else
-                                    for (var type in sortedTypes) ...[
-                                      SliverToBoxAdapter(
-                                        child: Padding(
-                                          padding: const EdgeInsets.fromLTRB(
-                                            12,
-                                            16,
-                                            12,
-                                            16,
-                                          ),
-                                          child: Row(
-                                            children: [
-                                              Text(
-                                                type.toUpperCase(),
-                                                style: theme
-                                                    .textTheme
-                                                    .titleSmall
-                                                    ?.copyWith(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: theme
-                                                          .colorScheme
-                                                          .primary,
-                                                      letterSpacing: 1.2,
-                                                    ),
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Expanded(
-                                                child: Divider(
-                                                  color: theme
-                                                      .colorScheme
-                                                      .primary
-                                                      .withValues(alpha: 0.2),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
+                            : RefreshIndicator(
+                                onRefresh: () async {
+                                  // Refresh the underlying stream provider
+                                  ref.refresh(widget.streamProvider);
+                                },
+                                child: CustomScrollView(
+                                  physics:
+                                      const AlwaysScrollableScrollPhysics(),
+                                  slivers: [
+                                    if (listState.searchQuery.isNotEmpty)
                                       SliverPadding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                        ),
+                                        padding: const EdgeInsets.all(12),
                                         sliver: SliverGrid(
                                           gridDelegate:
                                               const SliverGridDelegateWithFixedCrossAxisCount(
@@ -552,26 +494,92 @@ class _ProductListPageRiverpodState<T>
                                                 crossAxisSpacing: 10,
                                                 mainAxisSpacing: 10,
                                               ),
-                                          delegate: SliverChildBuilderDelegate(
-                                            (context, index) {
-                                              final entity =
-                                                  groupedEntities[type]![index];
-                                              return _buildProductTile(
-                                                context,
-                                                entity,
-                                                entityAdapter,
-                                              );
-                                            },
-                                            childCount:
-                                                groupedEntities[type]!.length,
+                                          delegate: SliverChildBuilderDelegate((
+                                            context,
+                                            index,
+                                          ) {
+                                            final entity =
+                                                filteredEntities[index];
+                                            return _buildProductTile(
+                                              context,
+                                              entity,
+                                              entityAdapter,
+                                            );
+                                          }, childCount: filteredEntities.length),
+                                        ),
+                                      )
+                                    else
+                                      for (var type in sortedTypes) ...[
+                                        SliverToBoxAdapter(
+                                          child: Padding(
+                                            padding: const EdgeInsets.fromLTRB(
+                                              12,
+                                              16,
+                                              12,
+                                              14,
+                                            ),
+                                            child: Row(
+                                              children: [
+                                                Text(
+                                                  type.toUpperCase(),
+                                                  style: theme
+                                                      .textTheme
+                                                      .titleSmall
+                                                      ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: theme
+                                                            .colorScheme
+                                                            .primary,
+                                                        letterSpacing: 1.2,
+                                                      ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: Divider(
+                                                    color: theme
+                                                        .colorScheme
+                                                        .primary
+                                                        .withValues(alpha: 0.2),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
                                           ),
                                         ),
-                                      ),
-                                    ],
-                                  const SliverToBoxAdapter(
-                                    child: SizedBox(height: 80),
-                                  ),
-                                ],
+                                        SliverPadding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                          ),
+                                          sliver: SliverGrid(
+                                            gridDelegate:
+                                                const SliverGridDelegateWithFixedCrossAxisCount(
+                                                  crossAxisCount: 2,
+                                                  childAspectRatio: 0.65,
+                                                  crossAxisSpacing: 10,
+                                                  mainAxisSpacing: 10,
+                                                ),
+                                            delegate: SliverChildBuilderDelegate(
+                                              (context, index) {
+                                                final entity =
+                                                    groupedEntities[type]![index];
+                                                return _buildProductTile(
+                                                  context,
+                                                  entity,
+                                                  entityAdapter,
+                                                );
+                                              },
+                                              childCount:
+                                                  groupedEntities[type]!.length,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    const SliverToBoxAdapter(
+                                      child: SizedBox(height: 80),
+                                    ),
+                                  ],
+                                ),
                               ),
                       ),
                     ],
@@ -589,12 +597,12 @@ class _ProductListPageRiverpodState<T>
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Error loading ${widget.entityMeta.entityNamePluralLower}',
+                        '${l10n['error_loading'] ?? 'Error loading'} ${l10n[widget.entityMeta.entityNamePluralLower] ?? widget.entityMeta.entityNamePluralLower}',
                         style: theme.textTheme.titleMedium,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        err.toString(),
+                        l10n[err.toString()] ?? err.toString(),
                         style: theme.textTheme.bodySmall,
                         textAlign: TextAlign.center,
                       ),

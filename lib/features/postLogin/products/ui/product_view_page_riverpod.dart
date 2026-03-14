@@ -270,6 +270,7 @@ class ProductViewPageRiverpod extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final l10n = ref.watch(l10nProvider);
     final productAsync = ref.watch(productByIdProvider(entityId));
     final productAdapter = ref.watch(productAdapterProvider);
     final isInitialized = ref.watch(rbacInitializationProvider);
@@ -470,12 +471,15 @@ class ProductViewPageRiverpod extends ConsumerWidget {
                     color: theme.colorScheme.error,
                   ),
                   const SizedBox(height: 16),
-                  const Text(
-                    'Error loading product',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  Text(
+                    '${l10n['error_loading'] ?? 'Error loading'} product',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
-                  Text(err.toString(), textAlign: TextAlign.center),
+                  Text(
+                    l10n[err.toString()] ?? err.toString(),
+                    textAlign: TextAlign.center,
+                  ),
                 ],
               ),
             ),

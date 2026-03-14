@@ -59,6 +59,7 @@ class PurchaseOrderTileLogic {
         poLat: entity.poLat,
         poLong: entity.poLong,
         status: newStatus,
+        adminComment: entity.adminComment,
       );
 
       await service.update(entity.poId!, updatedEntity);

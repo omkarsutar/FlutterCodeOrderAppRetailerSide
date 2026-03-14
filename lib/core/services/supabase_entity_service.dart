@@ -86,11 +86,16 @@ abstract class SupabaseEntityService<T> extends LoggingEntityService<T> {
     yield initialData;
 
     // Listen for changes and re-fetch sorted list
-    await for (final _
-        in client.from(tableName).stream(primaryKey: [idColumn])) {
-      final updatedData = await fetchAllImpl("Listen");
-      yield updatedData;
-    }
+    yield* client
+        .from(tableName)
+        .stream(primaryKey: [idColumn])
+        .handleError((error, stackTrace) {
+          logger.error(
+            'Error in SupabaseEntityService stream for $tableName: $error',
+            stackTrace is StackTrace ? stackTrace : null,
+          );
+        })
+        .asyncMap((_) => fetchAllImpl("Listen"));
   }
 
   // Legacy Impl methods

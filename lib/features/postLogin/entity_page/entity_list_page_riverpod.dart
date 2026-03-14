@@ -7,6 +7,7 @@ import '../../../core/config/module_config.dart';
 import '../../../core/models/entity_meta.dart';
 import '../../../core/services/entity_service.dart';
 import 'package:flutter_supabase_order_app_mobile/shared/widgets/shared_widget_barrel.dart';
+import 'package:flutter_supabase_order_app_mobile/core/providers/localization_provider.dart';
 import 'entity_card.dart';
 import 'providers/generic_list_controller.dart';
 import 'providers/generic_list_logic.dart';
@@ -25,7 +26,7 @@ class EntityListPageRiverpod<T> extends ConsumerStatefulWidget {
   final SortingConfig? initialSorting;
 
   // Riverpod providers
-  final ProviderListenable<AsyncValue<List<T>>> streamProvider;
+  final Refreshable<AsyncValue<List<T>>> streamProvider;
   final Provider<EntityAdapter<T>> adapterProvider;
   final Provider<EntityService<T>> serviceProvider;
 
@@ -101,6 +102,7 @@ class _EntityListPageRiverpodState<T>
     final service = ref.watch(widget.serviceProvider);
 
     final entitiesAsync = ref.watch(widget.streamProvider);
+    final l10n = ref.watch(l10nProvider);
 
     // Use entityName as unique key for the controller family
     final controllerKey = widget.entityMeta.entityName;
@@ -214,42 +216,48 @@ class _EntityListPageRiverpodState<T>
                     );
                   }
 
-                  return ListView.builder(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    itemCount: filteredEntities.length,
-                    itemBuilder: (context, index) {
-                      final entity = filteredEntities[index];
-                      // Use custom builder if provided
-                      if (widget.customItemBuilder != null) {
-                        return widget.customItemBuilder!(
-                          context,
-                          entity,
-                          entityAdapter,
-                          () => context.pushNamed(
-                            widget.viewRouteName,
-                            pathParameters: {
-                              'id': entityAdapter
-                                  .getId(entity, widget.idField)
-                                  .toString(),
-                            },
-                          ),
-                        );
-                      }
-
-                      return EntityCard<T>(
-                        entity: entity,
-                        adapter: entityAdapter,
-                        entityService: service,
-                        fieldConfigs: widget.fieldConfigs
-                            .where((f) => f.visibleInList)
-                            .toList(),
-                        idField: widget.idField,
-                        timestampField: widget.timestampField,
-                        entityLabel: widget.entityMeta.entityName,
-                        entityLabelLower: widget.entityMeta.entityNameLower,
-                        viewRouteName: widget.viewRouteName,
-                      );
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      ref.refresh(widget.streamProvider);
                     },
+                    child: ListView.builder(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      itemCount: filteredEntities.length,
+                      itemBuilder: (context, index) {
+                        final entity = filteredEntities[index];
+                        // Use custom builder if provided
+                        if (widget.customItemBuilder != null) {
+                          return widget.customItemBuilder!(
+                            context,
+                            entity,
+                            entityAdapter,
+                            () => context.pushNamed(
+                              widget.viewRouteName,
+                              pathParameters: {
+                                'id': entityAdapter
+                                    .getId(entity, widget.idField)
+                                    .toString(),
+                              },
+                            ),
+                          );
+                        }
+
+                        return EntityCard<T>(
+                          entity: entity,
+                          adapter: entityAdapter,
+                          entityService: service,
+                          fieldConfigs: widget.fieldConfigs
+                              .where((f) => f.visibleInList)
+                              .toList(),
+                          idField: widget.idField,
+                          timestampField: widget.timestampField,
+                          entityLabel: widget.entityMeta.entityName,
+                          entityLabelLower: widget.entityMeta.entityNameLower,
+                          viewRouteName: widget.viewRouteName,
+                        );
+                      },
+                    ),
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
@@ -264,12 +272,12 @@ class _EntityListPageRiverpodState<T>
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        'Error loading ${widget.entityMeta.entityNamePluralLower}',
+                        '${l10n['error_loading'] ?? 'Error loading'} ${l10n[widget.entityMeta.entityNamePluralLower] ?? widget.entityMeta.entityNamePluralLower}',
                         style: theme.textTheme.titleMedium,
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        err.toString(),
+                        l10n[err.toString()] ?? err.toString(),
                         style: theme.textTheme.bodySmall,
                         textAlign: TextAlign.center,
                       ),

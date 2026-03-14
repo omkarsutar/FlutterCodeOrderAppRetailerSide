@@ -19,6 +19,7 @@ class ModelPurchaseOrderFields {
   static const String createdAt = 'created_at';
   static const String visitOrder = 'visit_order';
   static const String updatedAt = 'updated_at';
+  static const String adminComment = 'admin_comment';
 
   static const Map<String, String> labels = {
     poId: 'PO',
@@ -36,6 +37,7 @@ class ModelPurchaseOrderFields {
     createdAt: 'Created At',
     updatedAt: 'Updated At',
     visitOrder: 'Visit Order',
+    adminComment: 'Admin Comment',
   };
 
   static String getLabel(String field) => labels[field] ?? field;
@@ -56,6 +58,7 @@ class ModelPurchaseOrder {
   final String? updatedBy; // required FK
   final DateTime? createdAt; // nullable, DB default
   final DateTime? updatedAt; // nullable, DB default
+  final String? adminComment; // nullable
   final int? visitOrder; // nullable, from view join
   final Map<String, dynamic> _resolvedLabels;
 
@@ -74,6 +77,7 @@ class ModelPurchaseOrder {
     this.updatedBy,
     this.createdAt,
     this.updatedAt,
+    this.adminComment,
     this.visitOrder,
     Map<String, dynamic>? resolvedLabels,
   }) : _resolvedLabels = resolvedLabels ?? const {};
@@ -127,6 +131,7 @@ class ModelPurchaseOrder {
               map[ModelPurchaseOrderFields.updatedAt].toString(),
             )
           : null,
+      adminComment: map[ModelPurchaseOrderFields.adminComment] as String?,
       visitOrder: map[ModelPurchaseOrderFields.visitOrder] != null
           ? int.tryParse(map[ModelPurchaseOrderFields.visitOrder].toString())
           : null,
@@ -157,6 +162,8 @@ class ModelPurchaseOrder {
       map[ModelPurchaseOrderFields.createdAt] = createdAt!.toIso8601String();
     if (updatedAt != null)
       map[ModelPurchaseOrderFields.updatedAt] = updatedAt!.toIso8601String();
+    if (adminComment != null)
+      map[ModelPurchaseOrderFields.adminComment] = adminComment;
     if (visitOrder != null)
       map[ModelPurchaseOrderFields.visitOrder] = visitOrder;
 
@@ -179,6 +186,7 @@ class ModelPurchaseOrder {
       'updatedBy': updatedBy,
       'createdAt': createdAt?.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
+      'adminComment': adminComment,
       'visitOrder': visitOrder,
     };
   }
@@ -199,6 +207,7 @@ class ModelPurchaseOrder {
       updatedBy: json['updatedBy'] as String,
       createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
       updatedAt: DateTime.tryParse(json['updatedAt'] ?? '') ?? DateTime.now(),
+      adminComment: json['adminComment'] as String?,
       visitOrder: json['visitOrder'] as int?,
     );
   }

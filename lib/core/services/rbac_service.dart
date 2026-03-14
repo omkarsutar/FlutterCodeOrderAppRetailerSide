@@ -69,15 +69,28 @@ class RbacService {
       // Notify listeners that RBAC is ready
       initializationNotifier.value = true;
     } catch (e, stackTrace) {
-      ErrorHandler.handle(
-        e,
-        stackTrace,
-        context: 'Initializing RBAC for user $userId',
-        showToUser: true,
-      );
+      if (e is NoInternetException) {
+        // Log warning but don't crash the app
+        ErrorHandler.handle(
+          e,
+          stackTrace,
+          context: 'Initializing RBAC for user $userId',
+          showToUser: false,
+          logLevel: ErrorLogLevel.warning,
+        );
+      } else {
+        ErrorHandler.handle(
+          e,
+          stackTrace,
+          context: 'Initializing RBAC for user $userId',
+          showToUser: true,
+        );
+      }
       // Ensure we don't leave it in a "loading" state forever if it fails,
       // though false is the default.
       initializationNotifier.value = false;
+      // Re-throw if it's not a connectivity issue, or if we want the caller to know
+      // For RBAC, we probably want to re-throw so Auth knows initialization failed.
       rethrow;
     }
   }

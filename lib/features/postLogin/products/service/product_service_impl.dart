@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
 
 import '../../../../core/services/entity_service.dart';
 import '../../../../core/services/supabase_entity_service.dart';
@@ -67,12 +68,13 @@ class ProductServiceImpl extends SupabaseEntityService<ModelProduct> {
         ..subscribe((status, [error]) {
           if (status == RealtimeSubscribeStatus.timedOut ||
               status == RealtimeSubscribeStatus.channelError) {
-            logger.error(
-              'Realtime subscription error for $tableName: $status ${error ?? ""}',
-              null,
+            logger.warning(
+              'Realtime subscription issue for $tableName: $status ${error ?? ""}',
             );
+            // Don't add error to controller if we already have data or if it's just a transient connection issue
+            // but for now we follow the existing pattern of adding 'no_internet' string error
             if (!controller.isClosed) {
-              controller.addError('no_internet');
+              controller.addError(NoInternetException());
             }
           }
         });

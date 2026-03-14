@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_supabase_order_app_mobile/core/providers/core_providers.dart';
 import 'package:flutter_supabase_order_app_mobile/core/utils/date_utils.dart';
 import 'package:flutter_supabase_order_app_mobile/features/postLogin/po_items/po_item_barrel.dart';
-import 'package:go_router/go_router.dart';
 
 import '../../../../core/services/entity_service.dart';
 import '../model/purchase_order_model.dart';
@@ -34,6 +33,18 @@ class PurchaseOrderListTile extends ConsumerStatefulWidget {
 
 class _PurchaseOrderListTileState extends ConsumerState<PurchaseOrderListTile> {
   bool _isUpdating = false;
+  bool _isExpanded = false;
+
+  void _onStatusChanged(String? newStatus) {
+    if (newStatus == null) return;
+    PurchaseOrderTileLogic.updateStatus(
+      context: context,
+      ref: ref,
+      entity: widget.entity,
+      newStatus: newStatus,
+      setUpdating: (val) => setState(() => _isUpdating = val),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,30 +78,20 @@ class _PurchaseOrderListTileState extends ConsumerState<PurchaseOrderListTile> {
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
-        onTap:
-            widget.onTap ??
-            () {
-              final poId = widget.entity.poId;
-              if (poId != null) {
-                context.pushNamed(
-                  'poItemListForPO',
-                  pathParameters: {'poId': poId},
-                );
-              }
-            },
+        onTap: () => setState(() => _isExpanded = !_isExpanded),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (widget.poItemTile != true) ...[
-                _buildHeader(theme, dateStr, status, canUpdate),
+                _buildHeader(theme, dateStr, _isExpanded, status),
                 const SizedBox(height: 12),
               ],
               _buildShopInfo(context, theme, shopName, canDelete, status),
               const SizedBox(height: 12),
-              _buildStatsRow(theme, itemCount),
-              if (widget.entity.poId != null) ...[
+              _buildStatsRow(theme, itemCount, status, canUpdate),
+              if (widget.entity.poId != null && _isExpanded) ...[
                 const SizedBox(height: 16),
                 const Divider(height: 1),
                 const SizedBox(height: 16),
@@ -106,11 +107,10 @@ class _PurchaseOrderListTileState extends ConsumerState<PurchaseOrderListTile> {
   Widget _buildHeader(
     ThemeData theme,
     String dateStr,
+    bool isExpanded,
     String status,
-    bool canUpdate,
   ) {
     final statusColor = PurchaseOrderTileLogic.getStatusColor(status);
-
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -123,14 +123,12 @@ class _PurchaseOrderListTileState extends ConsumerState<PurchaseOrderListTile> {
             ),
           ),
         ),
-        if (_isUpdating)
-          const SizedBox(
-            width: 16,
-            height: 16,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          )
-        else
-          _StatusBadge(status: status, statusColor: statusColor),
+        _StatusBadge(status: status, statusColor: statusColor),
+        const SizedBox(width: 8),
+        Icon(
+          isExpanded ? Icons.expand_less : Icons.expand_more,
+          color: theme.colorScheme.onSurfaceVariant,
+        ),
       ],
     );
   }
@@ -159,7 +157,12 @@ class _PurchaseOrderListTileState extends ConsumerState<PurchaseOrderListTile> {
     );
   }
 
-  Widget _buildStatsRow(ThemeData theme, int itemCount) {
+  Widget _buildStatsRow(
+    ThemeData theme,
+    int itemCount,
+    String status,
+    bool canUpdate,
+  ) {
     final profitStr = PurchaseOrderTileLogic.formatCurrency(
       widget.entity.profitToShop,
     );

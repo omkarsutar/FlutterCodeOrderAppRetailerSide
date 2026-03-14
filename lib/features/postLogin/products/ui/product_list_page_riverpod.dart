@@ -11,6 +11,7 @@ import 'package:flutter_supabase_order_app_mobile/features/postLogin/products/ui
 import 'package:flutter_supabase_order_app_mobile/shared/widgets/shared_widget_barrel.dart';
 import '../../cart/providers/cart_view_logic.dart';
 import '../../cart/providers/cart_providers.dart';
+import '../../../../core/exceptions/app_exceptions.dart';
 import '../../../../core/providers/localization_provider.dart';
 import 'package:go_router/go_router.dart';
 
@@ -99,7 +100,7 @@ class _ProductListPageRiverpodState<T>
     _profitColorAnimation =
         ColorTween(
           begin: Colors.green.withValues(alpha: 0.2),
-          end: Colors.white,
+          end: Colors.black,
         ).animate(
           CurvedAnimation(
             parent: _profitHighlightController,
@@ -175,7 +176,7 @@ class _ProductListPageRiverpodState<T>
           decoration: BoxDecoration(
             color: _profitHighlightController.value > 0
                 ? _profitColorAnimation.value
-                : Colors.white,
+                : Colors.black,
             borderRadius: BorderRadius.circular(8),
           ),
           child: ScaleTransition(
@@ -184,7 +185,7 @@ class _ProductListPageRiverpodState<T>
               context,
               ref.watch(l10nProvider)['shop_profit'] ?? 'Shop Profit\nOn MRP',
               '₹${viewData.totalProfit}',
-              color: Colors.green,
+              color: const Color(0xFFFFD700),
             ),
           ),
         );
@@ -211,7 +212,7 @@ class _ProductListPageRiverpodState<T>
                 line,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
+                  color: Colors.white,
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
                   height: 1.1,
@@ -494,18 +495,18 @@ class _ProductListPageRiverpodState<T>
                                                 crossAxisSpacing: 10,
                                                 mainAxisSpacing: 10,
                                               ),
-                                          delegate: SliverChildBuilderDelegate((
-                                            context,
-                                            index,
-                                          ) {
-                                            final entity =
-                                                filteredEntities[index];
-                                            return _buildProductTile(
-                                              context,
-                                              entity,
-                                              entityAdapter,
-                                            );
-                                          }, childCount: filteredEntities.length),
+                                          delegate: SliverChildBuilderDelegate(
+                                            (context, index) {
+                                              final entity =
+                                                  filteredEntities[index];
+                                              return _buildProductTile(
+                                                context,
+                                                entity,
+                                                entityAdapter,
+                                              );
+                                            },
+                                            childCount: filteredEntities.length,
+                                          ),
                                         ),
                                       )
                                     else
@@ -586,29 +587,46 @@ class _ProductListPageRiverpodState<T>
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (err, stack) => Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.error_outline,
-                        size: 64,
-                        color: theme.colorScheme.error,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        '${l10n['error_loading'] ?? 'Error loading'} ${l10n[widget.entityMeta.entityNamePluralLower] ?? widget.entityMeta.entityNamePluralLower}',
-                        style: theme.textTheme.titleMedium,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        l10n[err.toString()] ?? err.toString(),
-                        style: theme.textTheme.bodySmall,
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
+                error: (err, stack) {
+                  final isOffline =
+                      err is NoInternetException ||
+                      err.toString().contains('no_internet') ||
+                      err.toString().contains('SocketException');
+
+                  if (isOffline) {
+                    return _buildOfflineState(context, l10n);
+                  }
+
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.error_outline,
+                          size: 64,
+                          color: theme.colorScheme.error,
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          '${l10n['error_loading'] ?? 'Error loading'} ${l10n[widget.entityMeta.entityNamePluralLower] ?? widget.entityMeta.entityNamePluralLower}',
+                          style: theme.textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n[err.toString()] ?? err.toString(),
+                          style: theme.textTheme.bodySmall,
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        FilledButton.icon(
+                          onPressed: () => ref.refresh(widget.streamProvider),
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -654,6 +672,63 @@ class _ProductListPageRiverpodState<T>
             idField: widget.idField,
             adapter: entityAdapter as EntityAdapter<ModelProduct>,
           ),
+    );
+  }
+
+  Widget _buildOfflineState(BuildContext context, Map<String, String> l10n) {
+    final theme = Theme.of(context);
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.errorContainer.withValues(alpha: 0.3),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.wifi_off_rounded,
+                size: 64,
+                color: theme.colorScheme.error,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              l10n['no_internet'] ?? 'No internet connection',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              l10n['internet_disconnected'] ??
+                  'You are offline. Some features may not work.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 32),
+            FilledButton.icon(
+              onPressed: () {
+                ref.refresh(widget.streamProvider);
+              },
+              icon: const Icon(Icons.refresh),
+              label: const Text('Retry'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

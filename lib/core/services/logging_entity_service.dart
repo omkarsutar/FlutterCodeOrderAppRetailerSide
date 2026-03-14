@@ -116,8 +116,8 @@ abstract class LoggingEntityService<T> implements EntityService<T> {
 
   @override
   Stream<List<T>> streamEntities() async* {
-    await _ensureConnected();
     try {
+      await _ensureConnected();
       logger.info('Starting stream for $entityTypeName from $tableName');
       await for (final items in streamEntitiesImpl()) {
         logger.info(
@@ -126,6 +126,14 @@ abstract class LoggingEntityService<T> implements EntityService<T> {
         yield items;
       }
     } catch (e, st) {
+      if (e is NoInternetException) {
+        logger.warning('Offline while trying to start stream for $entityTypeName');
+        // We yield an empty list instead of rethrowing to allow the UI to render an offline state
+        // rather than a blank screen/crash.
+        yield [];
+        // We rethrow so the AsyncValue picks up the error state, but the UI should handle it.
+        rethrow;
+      }
       logger.error('Stream error for $entityTypeName', st);
       rethrow;
     }

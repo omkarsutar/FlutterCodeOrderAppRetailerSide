@@ -82,24 +82,38 @@ class AuthService {
 
   /// Load user profile from Supabase and store globally, then initialize RBAC
   Future<void> loadAndStoreUserProfile() async {
-    if (!await ConnectivityService.isOnline()) {
-      throw NoInternetException();
+    try {
+      if (!await ConnectivityService.isOnline()) {
+        throw NoInternetException();
+      }
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) throw Exception('User not logged in');
+
+      final userData = await _client
+          .from(ModelUserFields.table)
+          .select('*')
+          .eq(ModelUserFields.userId, userId)
+          .single();
+
+      final profile = ModelUser.fromMap(userData);
+
+      // Initialize RBAC for the logged-in user BEFORE marking profile as ready
+      await _rbacService.initializeRbac(userId);
+
+      _ref.read(userProfileStateProvider.notifier).setProfile(profile);
+    } catch (e, st) {
+      ErrorHandler.handle(
+        e,
+        st,
+        context: 'Loading user profile',
+        showToUser: e is! NoInternetException, // Don't show redundant offline toast
+        logLevel:
+            e is NoInternetException
+                ? ErrorLogLevel.warning
+                : ErrorLogLevel.error,
+      );
+      // We don't rethrow here to prevent crashing the global initialization flow
     }
-    final userId = _client.auth.currentUser?.id;
-    if (userId == null) throw Exception('User not logged in');
-
-    final userData = await _client
-        .from(ModelUserFields.table)
-        .select('*')
-        .eq(ModelUserFields.userId, userId)
-        .single();
-
-    final profile = ModelUser.fromMap(userData);
-
-    // Initialize RBAC for the logged-in user BEFORE marking profile as ready
-    await _rbacService.initializeRbac(userId);
-
-    _ref.read(userProfileStateProvider.notifier).setProfile(profile);
   }
 
   /// Subscribe to realtime updates for the current user's profile

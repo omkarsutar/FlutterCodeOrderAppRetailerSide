@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../core/providers/core_providers.dart';
 import '../core/providers/user_profile_state_provider.dart';
+import '../core/providers/app_config_provider.dart';
 import '../core/models/entity_meta.dart';
 
 import '../features/postLogin/loading_page/loading_page.dart';
@@ -15,6 +16,7 @@ import '../features/preLogin/welcome_page.dart';
 import '../features/auth/auth_page.dart';
 import '../features/postLogin/cart/cart_barrel.dart';
 import '../shared/widgets/shared_widget_barrel.dart';
+import '../features/postLogin/vacation_mode/vacation_mode_screen.dart';
 import '../core/routing/module_route_generator.dart';
 import '../core/services/rbac_service.dart';
 
@@ -47,6 +49,19 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
     initialLocation: AppRoute.welcome,
     redirect: (context, state) async {
+      // --- Vacation Mode Check (Highest Priority) ---
+      final appConfig = ref.read(appConfigProvider).valueOrNull;
+      if (appConfig != null && appConfig.vacationMode) {
+        if (state.uri.path != AppRoute.vacation) {
+          debugPrint('AppRouter: Vacation Mode active -> Redirecting to Vacation Screen');
+          return AppRoute.vacation;
+        }
+        return null; // Stay on vacation screen
+      } else if (state.uri.path == AppRoute.vacation) {
+        // If not in vacation mode but at vacation path, redirect to welcome/home
+        return AppRoute.welcome;
+      }
+
       final session = Supabase.instance.client.auth.currentSession;
       final isLoggedIn = session != null;
 
@@ -200,5 +215,10 @@ final authRoutes = [
     name: AppRoute.unauthorizedName,
     path: AppRoute.unauthorized,
     builder: (context, state) => const UnauthorizedPage(),
+  ),
+  GoRoute(
+    name: AppRoute.vacationName,
+    path: AppRoute.vacation,
+    builder: (context, state) => const VacationModeScreen(),
   ),
 ];

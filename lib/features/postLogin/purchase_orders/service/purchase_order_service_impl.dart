@@ -161,7 +161,18 @@ class PurchaseOrderServiceImpl
           ),
           callback: (_) => fetch(),
         )
-        ..subscribe();
+        ..subscribe((status, [error]) {
+          if (status == RealtimeSubscribeStatus.timedOut ||
+              status == RealtimeSubscribeStatus.channelError) {
+            logger.error(
+              'Realtime subscription error for purchase_orders in route $routeId: $status ${error ?? ""}',
+              null,
+            );
+            if (!controller.isClosed) {
+              controller.addError('no_internet');
+            }
+          }
+        });
     }
 
     controller.onListen = startSubscription;
@@ -212,7 +223,18 @@ class PurchaseOrderServiceImpl
           table: tableName,
           callback: (_) => fetch(),
         )
-        ..subscribe();
+        ..subscribe((status, [error]) {
+          if (status == RealtimeSubscribeStatus.timedOut ||
+              status == RealtimeSubscribeStatus.channelError) {
+            logger.error(
+              'Realtime subscription error for purchase_orders: $status ${error ?? ""}',
+              null,
+            );
+            if (!controller.isClosed) {
+              controller.addError('no_internet');
+            }
+          }
+        });
     }
 
     controller.onListen = startSubscription;

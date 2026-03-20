@@ -78,7 +78,18 @@ class PoItemServiceImpl extends ForeignKeyAwareService<ModelPoItem>
           table: tableName,
           callback: (_) => fetch(),
         )
-        ..subscribe();
+        ..subscribe((status, [error]) {
+          if (status == RealtimeSubscribeStatus.timedOut ||
+              status == RealtimeSubscribeStatus.channelError) {
+            logger.error(
+              'Realtime subscription error for all po_items: $status ${error ?? ""}',
+              null,
+            );
+            if (!controller.isClosed) {
+              controller.addError('no_internet');
+            }
+          }
+        });
     }
 
     controller.onListen = startSubscription;
@@ -167,7 +178,18 @@ class PoItemServiceImpl extends ForeignKeyAwareService<ModelPoItem>
           ),
           callback: (_) => fetch(),
         )
-        ..subscribe();
+        ..subscribe((status, [error]) {
+          if (status == RealtimeSubscribeStatus.timedOut ||
+              status == RealtimeSubscribeStatus.channelError) {
+            logger.error(
+              'Realtime subscription error for po_items in $poId: $status ${error ?? ""}',
+              null,
+            );
+            if (!controller.isClosed) {
+              controller.addError('no_internet');
+            }
+          }
+        });
     }
 
     controller.onListen = startSubscription;

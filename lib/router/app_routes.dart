@@ -15,6 +15,7 @@ class AppRoute {
   static const String loading = '/loading';
   static const String cart = '/cart';
   static const String unauthorized = '/unauthorized';
+  static const String vacation = '/vacation';
 
   // Route names for GoRouter named navigation
   static const String welcomeName = 'welcome';
@@ -24,6 +25,7 @@ class AppRoute {
   static const String loadingName = 'loading';
   static const String cartName = 'cart';
   static const String unauthorizedName = 'unauthorized';
+  static const String vacationName = 'vacation';
 
   /// ============================================================================
   /// Notes Routes

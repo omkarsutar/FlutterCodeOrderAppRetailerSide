@@ -77,7 +77,8 @@ class CartOrderService {
       poShopId: poShopId,
       poRouteId: poRouteId,
       status: 'confirmed',
-      userComment: userComment,
+      userComment: null, // Keep userComment untouched as per request
+      adminComment: userComment, // Store metadata info in adminComment
       createdBy: userId,
       updatedBy: userId,
     );

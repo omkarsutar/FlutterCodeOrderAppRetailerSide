@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_supabase_order_app_mobile/features/postLogin/products/product_barrel.dart';
 import 'package:flutter_supabase_order_app_mobile/features/postLogin/retailer_shop_links/retailer_shop_link_barrel.dart';
 import 'package:flutter_supabase_order_app_mobile/features/postLogin/users/user_barrel.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:html' as html show window;
+import 'core/utils/platform/web_utils.dart';
 import 'core/config/supabase_config.dart';
 import 'core/globals.dart';
 import 'core/providers/auth_providers.dart';
@@ -13,29 +14,6 @@ import 'core/providers/localization_provider.dart';
 import 'core/services/connectivity_service.dart';
 import 'router/app_router.dart';
 
-// Translate letters to numbers: a-0, b-1, c-2, d-3, e-4, f-5, g-6, h-7, i-8, j-9
-String _translateUtmSource(String utmSource) {
-  final translationMap = {
-    'a': '0',
-    'b': '1',
-    'c': '2',
-    'd': '3',
-    'e': '4',
-    'f': '5',
-    'g': '6',
-    'h': '7',
-    'i': '8',
-    'j': '9',
-  };
-
-  return utmSource
-      .split('')
-      .map((char) {
-        return translationMap[char] ??
-            char; // Keep non-translatable characters unchanged
-      })
-      .join('');
-}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,13 +25,10 @@ void main() async {
   );
 
   // Extract and store utm_source from URL parameters on web
-  if (const bool.fromEnvironment('dart.library.html') == true) {
+  if (kIsWeb) {
     try {
-      final uri = Uri.parse(html.window.location.href);
-      final utmSource = uri.queryParameters['utm_source'];
-      if (utmSource != null && utmSource.isNotEmpty) {
-        // Translate numeric characters to letters
-        final translatedUtmSource = _translateUtmSource(utmSource);
+      final translatedUtmSource = webUtils.getUtmSource();
+      if (translatedUtmSource != null) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('utm_source', translatedUtmSource);
         debugPrint('UTM Source translated and saved: $translatedUtmSource');
@@ -61,22 +36,7 @@ void main() async {
 
       // Memory Diagnostic Logger
       Stream.periodic(const Duration(seconds: 10)).listen((_) {
-        try {
-          // ignore: undefined_prefixed_name
-          final memory = (html.window.performance as dynamic).memory;
-          if (memory != null) {
-            final used = (memory.usedJSHeapSize / 1024 / 1024).toStringAsFixed(
-              2,
-            );
-            final limit = (memory.jsHeapSizeLimit / 1024 / 1024)
-                .toStringAsFixed(2);
-            debugPrint('--- MEMORY DIAGNOSTIC ---');
-            debugPrint('JS Heap Used: $used MB / $limit MB');
-            debugPrint('-------------------------');
-          }
-        } catch (e) {
-          // Silent fail if performance.memory is not supported (e.g. Firefox)
-        }
+        webUtils.logMemoryDiagnostics();
       });
     } catch (e) {
       debugPrint('Error in web diagnostics: $e');

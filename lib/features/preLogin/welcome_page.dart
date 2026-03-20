@@ -8,6 +8,11 @@ class WelcomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // Responsive Font Sizing
+    final screenWidth = MediaQuery.sizeOf(context).width;
+    final titleFontSize = (screenWidth * 0.12).clamp(32.0, 64.0);
+    final subtitleFontSize = (screenWidth * 0.045).clamp(14.0, 24.0);
+
     return Scaffold(
       body: Stack(
         children: [
@@ -68,27 +73,31 @@ class WelcomePage extends StatelessWidget {
 
                   const SizedBox(height: 40),
 
+
                   // App Title
                   ShaderMask(
                     shaderCallback: (bounds) => const LinearGradient(
                       colors: [Colors.white, Color(0xFFFFD54F)],
                     ).createShader(bounds),
-                    child: const Text(
-                      'RASOIA',
-                      style: TextStyle(
-                        fontSize: 48,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 4,
-                        color: Colors.white,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        'ORDERZAPP',
+                        style: TextStyle(
+                          fontSize: titleFontSize,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 4,
+                          color: Colors.white,
+                        ),
                       ),
                     ),
                   ),
-                  const Text(
-                    'ORDERZAPP',
+                  Text(
+                    'RETAILER SIDE',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: subtitleFontSize,
                       fontWeight: FontWeight.w300,
-                      letterSpacing: 8,
+                      letterSpacing: 6,
                       color: Colors.white70,
                     ),
                   ),

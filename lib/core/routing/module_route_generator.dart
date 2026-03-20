@@ -16,7 +16,7 @@ class ModuleRouteGenerator<T> {
   final ModuleConfig config;
   final Provider<EntityService<T>> serviceProvider;
   final Provider<EntityAdapter<T>> adapterProvider;
-  final ProviderListenable<AsyncValue<List<T>>> streamProvider;
+  final Refreshable<AsyncValue<List<T>>> streamProvider;
   final AutoDisposeFutureProviderFamily<T?, String> entityByIdProvider;
   final AutoDisposeStateNotifierProvider<dynamic, dynamic> formProvider;
   final Widget Function(BuildContext, T, EntityAdapter<T>, VoidCallback)?
@@ -342,7 +342,7 @@ class ModuleRouteRegistry {
     required ModuleConfig config,
     required Provider<EntityService<T>> serviceProvider,
     required Provider<EntityAdapter<T>> adapterProvider,
-    required ProviderListenable<AsyncValue<List<T>>> streamProvider,
+    required Refreshable<AsyncValue<List<T>>> streamProvider,
     required AutoDisposeFutureProviderFamily<T?, String> entityByIdProvider,
     required AutoDisposeStateNotifierProvider<dynamic, dynamic> formProvider,
     Widget Function(BuildContext, T, EntityAdapter<T>, VoidCallback)?

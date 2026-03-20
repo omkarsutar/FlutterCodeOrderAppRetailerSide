@@ -24,10 +24,12 @@ class _CustomDrawerState extends ConsumerState<CustomDrawer> {
   bool _hasImageError = false;
 
   String? _userDisplayName() {
-    final user = ref.watch(userProfileProvider).value;
+    final userAsync = ref.watch(userProfileProvider);
+    final user = userAsync.valueOrNull;
     final currentUser = Supabase.instance.client.auth.currentUser;
+
     if (user == null) {
-      // Fallback to metadata if profile not yet loaded/available
+      // Fallback to metadata if profile not yet loaded/available or in error state
       final name = currentUser?.userMetadata?['name']?.toString();
       if (name != null && name.isNotEmpty) return name;
       return currentUser?.email;

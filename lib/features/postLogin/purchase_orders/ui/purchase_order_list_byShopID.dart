@@ -248,12 +248,22 @@ class _PurchaseOrderListByShopIDState
       );
     }
 
-    return _buildList(displayList);
+    return RefreshIndicator(
+      onRefresh: () async {
+        await ref
+            .read(
+              purchaseOrderListControllerProvider('purchaseOrderList').notifier,
+            )
+            .refreshData();
+      },
+      child: _buildList(displayList),
+    );
   }
 
   /// Builds the ListView of purchase orders
   Widget _buildList(List<ModelPurchaseOrder> displayList) {
     return ListView.builder(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(vertical: 8),
       itemCount: displayList.length + 1,
       itemBuilder: (context, index) {
